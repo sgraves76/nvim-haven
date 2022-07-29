@@ -64,9 +64,13 @@ local haven_config = {
 local line_ending = utils.iff(utils.is_windows, "\r\n", "\n")
 
 local print_message = function(is_error, msg)
-  vim.notify(msg, utils.iff(is_error, "error" : "info"), {
-    title= "nvim-haven"
-  })
+  vim.notify(
+    msg,
+    utils.iff(is_error, "error", "info"),
+    {
+      title = "nvim-haven"
+    }
+  )
 end
 
 local diff_strings = function(a, b)
@@ -480,7 +484,8 @@ M.setup = function(config)
   if config.exclusions ~= nil then
     for _, e in pairs(config.exclusions) do
       if type(e) ~= "function" then
-        print_message(true, 
+        print_message(
+          true,
           "'exlcusions' contains an entry that is not a function. Skipping all exclusions until this is corrected:"
         )
         utils.dump_table(e)
@@ -495,7 +500,8 @@ M.setup = function(config)
   if config.inclusions ~= nil then
     for _, e in pairs(config.inclusions) do
       if type(e) ~= "function" then
-        print_message(true, 
+        print_message(
+          true,
           "'inclusions' contains an entry that is not a function. Skipping this inclusion until it is corrected:"
         )
         utils.dump_table(e)
