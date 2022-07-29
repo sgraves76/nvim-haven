@@ -63,8 +63,10 @@ local haven_config = {
 }
 local line_ending = utils.iff(utils.is_windows, "\r\n", "\n")
 
-local print_message = function(...)
-  print("nvim-haven", ...)
+local print_message = function(is_error, msg)
+  vim.notify(msg, utils.iff(is_error, "error" : "info"), {
+    title= "nvim-haven"
+  })
 end
 
 local diff_strings = function(a, b)
@@ -85,12 +87,11 @@ local create_save_file = function(buf_info)
 end
 
 local save_change_file = function(buf_info, lines, save_file)
-  print_message("save_changed_file", buf_info.name)
   active_saves[save_file] = nil
 
   local file, err = io.open(save_file, "a")
   if file == nil then
-    print_message(err)
+    print_message(true, err)
     return
   end
 
@@ -104,25 +105,24 @@ local save_change_file = function(buf_info, lines, save_file)
   )
   _, err = file:write(file_entry .. line_ending)
   if err ~= nil then
-    print_message(err)
+    print_message(true, err)
   end
   file:close()
 end
 
 local save_change_file_entries = function(buf_info, entries, save_file)
-  print_message("save_changed_file", buf_info.name)
   active_saves[save_file] = nil
 
   local file, err = io.open(save_file, "w+")
   if file == nil then
-    print_message(err)
+    print_message(true, err)
     return
   end
 
   for _, entry in pairs(entries) do
     _, err = file:write(vim.json.encode(entry) .. line_ending)
     if err ~= nil then
-      print_message(err)
+      print_message(true, err)
     end
   end
   file:close()
@@ -480,7 +480,7 @@ M.setup = function(config)
   if config.exclusions ~= nil then
     for _, e in pairs(config.exclusions) do
       if type(e) ~= "function" then
-        print_message(
+        print_message(true, 
           "'exlcusions' contains an entry that is not a function. Skipping all exclusions until this is corrected:"
         )
         utils.dump_table(e)
@@ -495,7 +495,7 @@ M.setup = function(config)
   if config.inclusions ~= nil then
     for _, e in pairs(config.inclusions) do
       if type(e) ~= "function" then
-        print_message(
+        print_message(true, 
           "'inclusions' contains an entry that is not a function. Skipping this inclusion until it is corrected:"
         )
         utils.dump_table(e)
@@ -507,34 +507,34 @@ M.setup = function(config)
   haven_config.max_history_count =
     vim.F.if_nil(config.max_history_count, haven_config.max_history_count)
   if haven_config.max_history_count < 10 then
-    print_message("'max_history_count' too low: " .. haven_config.max_history_count)
+    print_message(true, "'max_history_count' too low: " .. haven_config.max_history_count)
     haven_config.max_history_count = 100
-    print_message("reset 'max_history_count': " .. haven_config.max_history_count)
+    print_message(true, "reset 'max_history_count': " .. haven_config.max_history_count)
   elseif haven_config.max_history_count > 500 then
-    print_message("'max_history_count' too high: " .. haven_config.max_history_count)
+    print_message(true, "'max_history_count' too high: " .. haven_config.max_history_count)
     haven_config.max_history_count = 500
-    print_message("reset 'max_history_count': " .. haven_config.max_history_count)
+    print_message(true, "reset 'max_history_count': " .. haven_config.max_history_count)
   end
 
   haven_config.save_timeout = vim.F.if_nil(config.save_timeout, haven_config.save_timeout)
   if haven_config.save_timeout < 135 then
-    print_message("'save_timeout' too low: " .. haven_config.save_timeout)
+    print_message(true, "'save_timeout' too low: " .. haven_config.save_timeout)
     haven_config.save_timeout = 135
-    print_message("reset 'save_timeout': " .. haven_config.save_timeout)
+    print_message(true, "reset 'save_timeout': " .. haven_config.save_timeout)
   elseif haven_config.save_timeout > 10000 then
-    print_message("'save_timeout' too high: " .. haven_config.save_timeout)
+    print_message(true, "'save_timeout' too high: " .. haven_config.save_timeout)
     haven_config.save_timeout = 10000
-    print_message("reset 'save_timeout': " .. haven_config.save_timeout)
+    print_message(true, "reset 'save_timeout': " .. haven_config.save_timeout)
   end
 
   if vim.fn.mkdir(haven_config.haven_path, "p") == 0 then
-    print_message("directory create failed: " .. haven_config.haven_path)
+    print_message(true, "directory create failed: " .. haven_config.haven_path)
     haven_config.enabled = false
     return
   end
 
   if vim.fn.isdirectory(haven_config.haven_path) == 0 then
-    print_message("directory not found: " .. haven_config.haven_path)
+    print_message(true, "directory not found: " .. haven_config.haven_path)
     haven_config.enabled = false
     return
   end
@@ -566,7 +566,7 @@ M.history = function(bufname)
     if vim.fn.filereadable(save_file) ~= 0 then
       local entries, err = read_change_file(buf_info, save_file)
       if entries == nil then
-        print_message(err)
+        print_message(true, err)
         return
       end
 
