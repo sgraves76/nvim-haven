@@ -118,7 +118,7 @@ local save_change_file = function(buf_info, lines, save_file)
   file:close()
 end
 
-local save_change_file_entries = function(buf_info, entries, save_file)
+local save_change_file_entries = function(entries, save_file)
   active_saves[save_file] = nil
 
   local file, err = io.open(save_file, "w+")
@@ -136,7 +136,7 @@ local save_change_file_entries = function(buf_info, entries, save_file)
   file:close()
 end
 
-local read_change_file = function(buf_info, save_file)
+local read_change_file = function(save_file)
   local file, err = io.open(save_file, "r")
   if file == nil then
     return nil, err
@@ -154,7 +154,7 @@ local read_change_file = function(buf_info, save_file)
     while #entries > haven_config.max_history_count do
       table.remove(entries, 1)
     end
-    save_change_file_entries(buf_info, entries, save_file)
+    save_change_file_entries(entries, save_file)
   end
 
   return entries
@@ -182,7 +182,7 @@ local process_file_changed = function(buf_info)
 
   local lines = vim.api.nvim_buf_get_lines(buf_info.bufnr, 0, -1, true)
 
-  local entries, _ = read_change_file(buf_info, save_file)
+  local entries, _ = read_change_file(save_file)
   if entries ~= nil then
     if
       diff_strings(
@@ -260,6 +260,14 @@ local setup_autocmds = function()
   if haven_config.enabled then
     vim.api.nvim_create_autocmd(
       "BufEnter",
+      {
+        group = group_id,
+        pattern = "*",
+        callback = handle_buffer_changed
+      }
+    )
+    vim.api.nvim_create_autocmd(
+      "BufWritePost",
       {
         group = group_id,
         pattern = "*",
@@ -574,7 +582,7 @@ M.history = function(bufname)
     buf_info = buf_info[1]
     local save_file = create_save_file(buf_info)
     if vim.fn.filereadable(save_file) ~= 0 then
-      local entries, err = read_change_file(buf_info, save_file)
+      local entries, err = read_change_file(save_file)
       if entries == nil then
         print_message(true, err)
         return
