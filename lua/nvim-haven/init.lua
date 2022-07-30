@@ -7,7 +7,7 @@ local finders = require("telescope.finders")
 local g = require("nvim-goodies")
 local global_state = require("telescope.state")
 local gpath = require("nvim-goodies.path")
-local os = require("nvim-goodies.os")
+local gos = require("nvim-goodies.os")
 local pfiletype = require("plenary.filetype")
 local pickers = require("telescope.pickers")
 local previewers = require("telescope.previewers")
@@ -19,24 +19,24 @@ local M = {}
 
 local active_saves = {}
 local changed_lookup = {}
-local directory_sep = g.iff(os.is_windows, "\\", "/")
+local directory_sep = g.iff(gos.is_windows, "\\", "/")
 local haven_config = {
   enabled = true,
   exclusions = {
     function(path, _)
-      if os.is_windows then
+      if gos.is_windows then
         return path:lower():starts_with((vim.fn.eval("$VIMRUNTIME") .. directory_sep):lower())
       end
       return path:starts_with(vim.fn.eval("$VIMRUNTIME") .. directory_sep)
     end,
     function(path, _)
-      if os.is_windows then
+      if gos.is_windows then
         return path:lower():starts_with((vim.fn.stdpath("data") .. directory_sep):lower())
       end
       return path:starts_with(vim.fn.stdpath("data") .. directory_sep)
     end,
     function(path, _)
-      if os.is_windows then
+      if gos.is_windows then
         return path:lower():starts_with(
           (gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. directory_sep):lower()
         )
@@ -46,7 +46,7 @@ local haven_config = {
       )
     end,
     function(path, _)
-      if os.is_windows then
+      if gos.is_windows then
         return path:lower():ends_with(
           (directory_sep .. ".git" .. directory_sep .. "COMMIT_EDITMSG"):lower()
         )
@@ -54,7 +54,7 @@ local haven_config = {
       return path:ends_with(directory_sep .. ".git" .. directory_sep .. "COMMIT_EDITMSG")
     end,
     function(path, config)
-      if os.is_windows then
+      if gos.is_windows then
         return path:lower():starts_with((config.haven_path .. directory_sep):lower())
       end
       return path:starts_with(config.haven_path .. directory_sep)
@@ -65,7 +65,7 @@ local haven_config = {
   max_history_count = 200,
   save_timeout = 10000
 }
-local line_ending = g.iff(os.is_windows, "\r\n", "\n")
+local line_ending = g.iff(gos.is_windows, "\r\n", "\n")
 
 local print_message = function(is_error, msg)
   vim.notify(
