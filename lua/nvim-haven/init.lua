@@ -570,6 +570,7 @@ M.disable = function()
   if haven_config.enabled then
     haven_config.enabled = false
     setup_autocmds()
+    handle_vim_leave()
   end
 end
 
