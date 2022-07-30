@@ -6,14 +6,12 @@ local conf = require("telescope.config").values
 local finders = require("telescope.finders")
 local g = require("nvim-goodies")
 local global_state = require("telescope.state")
-local gpath = require("nvim-goodies.path")
 local gos = require("nvim-goodies.os")
+local gpath = require("nvim-goodies.path")
 local pfiletype = require("plenary.filetype")
 local pickers = require("telescope.pickers")
 local previewers = require("telescope.previewers")
 local putils = require("telescope.previewers.utils")
-
-local ns_previewer = vim.api.nvim_create_namespace("telescope.previewers")
 
 local M = {}
 
@@ -66,6 +64,7 @@ local haven_config = {
   save_timeout = 10000
 }
 local line_ending = g.iff(gos.is_windows, "\r\n", "\n")
+local ns_previewer = vim.api.nvim_create_namespace("telescope.previewers")
 
 local print_message = function(is_error, msg)
   vim.notify(
@@ -81,16 +80,16 @@ local diff_strings = function(a, b)
   return vim.diff(a, b, {algorithm = "minimal"})
 end
 
-local encode = function(str)
-  return str:gsub("\r?\n", "\r\n"):gsub(
-    "([^%w%-%.%_%~ ])",
-    function(c)
-      return string.format("%%%02X", string.byte(c))
-    end
-  ):gsub(" ", "+")
-end
+local create_save_file_path = function(buf_info)
+  local encode = function(str)
+    return str:gsub("\r?\n", "\r\n"):gsub(
+      "([^%w%-%.%_%~ ])",
+      function(c)
+        return string.format("%%%02X", string.byte(c))
+      end
+    ):gsub(" ", "+")
+  end
 
-local create_save_file = function(buf_info)
   return gpath.create_path(haven_config.haven_path, encode(buf_info.name) .. ".save")
 end
 
@@ -161,15 +160,20 @@ local read_change_file = function(save_file)
 end
 
 local process_file_changed = function(buf_info)
-  local save_file = create_save_file(buf_info)
+  local save_file = create_save_file_path(buf_info)
   local changed_data = changed_lookup[save_file]
   local immediate = vim.fn.filereadable(save_file) == 0
+
+  local update_changed_lookup = function()
+    changed_lookup[save_file] = {changed = buf_info.changed, changedtick = buf_info.changedtick}
+  end
+
   if
     not immediate and
       (changed_data == nil or (buf_info.changed == 0 and changed_data.changed == 0) or
         buf_info.changedtick == changed_data.changedtick)
    then
-    changed_lookup[save_file] = {changed = buf_info.changed, changedtick = buf_info.changedtick}
+    update_changed_lookup()
     return
   end
 
@@ -178,7 +182,7 @@ local process_file_changed = function(buf_info)
     active_saves[save_file] = nil
   end
 
-  changed_lookup[save_file] = {changed = buf_info.changed, changedtick = buf_info.changedtick}
+  update_changed_lookup()
 
   local lines = vim.api.nvim_buf_get_lines(buf_info.bufnr, 0, -1, true)
 
@@ -219,7 +223,7 @@ local check_requirements = function()
     if buf_info ~= nil and #buf_info > 0 then
       buf_info = buf_info[1]
       if buf_info.name:len() ~= 0 and vim.fn.filereadable(buf_info.name) ~= 0 then
-        if changed_lookup[create_save_file(buf_info)] == nil then
+        if changed_lookup[create_save_file_path(buf_info)] == nil then
           for _, is_included in pairs(haven_config.inclusions) do
             if is_included(buf_info.name, haven_config) then
               return true, buf_info
@@ -248,7 +252,9 @@ end
 
 local handle_vim_leave = function()
   for _, active in pairs(active_saves) do
-    active.timer:stop()
+    if active.timer ~= nil then
+      active.timer:stop()
+    end
     active.do_save()
   end
   active_saves = {}
@@ -580,7 +586,7 @@ M.history = function(bufname)
   local buf_info = vim.fn.getbufinfo(bufname)
   if buf_info ~= nil and #buf_info > 0 then
     buf_info = buf_info[1]
-    local save_file = create_save_file(buf_info)
+    local save_file = create_save_file_path(buf_info)
     if vim.fn.filereadable(save_file) ~= 0 then
       local entries, err = read_change_file(save_file)
       if entries == nil then
