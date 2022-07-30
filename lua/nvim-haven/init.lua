@@ -1,13 +1,16 @@
+require("nvim-goodies.table")
 local action_state = require("telescope.actions.state")
 local actions = require("telescope.actions")
 local conf = require("telescope.config").values
 local finders = require("telescope.finders")
+local g = require("nvim-goodies")
 local global_state = require("telescope.state")
+local gpath = require("nvim-goodies.path")
+local os = require("nvim-goodies.os")
 local pfiletype = require("plenary.filetype")
 local pickers = require("telescope.pickers")
 local previewers = require("telescope.previewers")
 local putils = require("telescope.previewers.utils")
-local utils = require("nvim-haven.utils")
 
 local ns_previewer = vim.api.nvim_create_namespace("telescope.previewers")
 
@@ -15,34 +18,34 @@ local M = {}
 
 local active_saves = {}
 local changed_lookup = {}
-local directory_sep = utils.iff(utils.is_windows, "\\", "/")
+local directory_sep = g.iff(os.is_windows, "\\", "/")
 local haven_config = {
   enabled = true,
   exclusions = {
     function(path, _)
-      if utils.is_windows then
+      if os.is_windows then
         return path:lower():starts_with((vim.fn.eval("$VIMRUNTIME") .. directory_sep):lower())
       end
       return path:starts_with(vim.fn.eval("$VIMRUNTIME") .. directory_sep)
     end,
     function(path, _)
-      if utils.is_windows then
+      if os.is_windows then
         return path:lower():starts_with((vim.fn.stdpath("data") .. directory_sep):lower())
       end
       return path:starts_with(vim.fn.stdpath("data") .. directory_sep)
     end,
     function(path, _)
-      if utils.is_windows then
+      if os.is_windows then
         return path:lower():starts_with(
-          (utils.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. directory_sep):lower()
+          (gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. directory_sep):lower()
         )
       end
       return path:starts_with(
-        utils.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. directory_sep
+        gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. directory_sep
       )
     end,
     function(path, _)
-      if utils.is_windows then
+      if os.is_windows then
         return path:lower():ends_with(
           (directory_sep .. ".git" .. directory_sep .. "COMMIT_EDITMSG"):lower()
         )
@@ -50,23 +53,23 @@ local haven_config = {
       return path:ends_with(directory_sep .. ".git" .. directory_sep .. "COMMIT_EDITMSG")
     end,
     function(path, config)
-      if utils.is_windows then
+      if os.is_windows then
         return path:lower():starts_with((config.haven_path .. directory_sep):lower())
       end
       return path:starts_with(config.haven_path .. directory_sep)
     end
   },
-  haven_path = utils.create_path(vim.fn.stdpath("data"), "nvim-haven"),
+  haven_path = gpath.create_path(vim.fn.stdpath("data"), "nvim-haven"),
   inclusions = {},
   max_history_count = 200,
   save_timeout = 10000
 }
-local line_ending = utils.iff(utils.is_windows, "\r\n", "\n")
+local line_ending = g.iff(os.is_windows, "\r\n", "\n")
 
 local print_message = function(is_error, msg)
   vim.notify(
     msg,
-    utils.iff(is_error, "error", "info"),
+    g.iff(is_error, "error", "info"),
     {
       title = "nvim-haven"
     }
@@ -87,7 +90,7 @@ local encode = function(str)
 end
 
 local create_save_file = function(buf_info)
-  return utils.create_path(haven_config.haven_path, encode(buf_info.name) .. ".save")
+  return gpath.create_path(haven_config.haven_path, encode(buf_info.name) .. ".save")
 end
 
 local save_change_file = function(buf_info, lines, save_file)
@@ -383,7 +386,7 @@ local show_picker = function(entries)
   local do_forward_jump = function()
     if jump_state ~= nil and #jump_state.diff_rows > 0 then
       jump_state.cur =
-        utils.iff(
+        g.iff(
         (jump_state.cur + 1) <= #jump_state.diff_rows,
         jump_state.cur + 1,
         #jump_state.diff_rows
@@ -398,7 +401,7 @@ local show_picker = function(entries)
 
   local do_reverse_jump = function()
     if jump_state ~= nil and #jump_state.diff_rows > 0 then
-      jump_state.cur = utils.iff((jump_state.cur - 1) > 0, jump_state.cur - 1, 1)
+      jump_state.cur = g.iff((jump_state.cur - 1) > 0, jump_state.cur - 1, 1)
       jump_to_line(
         jump_state.self,
         jump_state.self.state.bufnr,
@@ -488,7 +491,7 @@ M.setup = function(config)
           true,
           "'exlcusions' contains an entry that is not a function. Skipping all exclusions until this is corrected:"
         )
-        utils.dump_table(e)
+        table.print_table(e)
         break
       end
       table.insert(haven_config.exclusions, e)
@@ -504,7 +507,7 @@ M.setup = function(config)
           true,
           "'inclusions' contains an entry that is not a function. Skipping this inclusion until it is corrected:"
         )
-        utils.dump_table(e)
+        table.print_table(e)
       end
       table.insert(haven_config.inclusions, e)
     end
