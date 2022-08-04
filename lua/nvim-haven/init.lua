@@ -12,6 +12,8 @@ local pfiletype = require("plenary.filetype")
 local pickers = require("telescope.pickers")
 local previewers = require("telescope.previewers")
 local putils = require("telescope.previewers.utils")
+local scan = require("plenary.scandir")
+local Path = require("plenary.path")
 
 local M = {}
 
@@ -565,6 +567,30 @@ M.setup = function(config)
   end
 
   setup_autocmds()
+end
+
+M.clean = function()
+  local decode = function(str)
+    if str == nil then
+      return ""
+    end
+
+    return str:gsub("+", " "):gsub(
+      "%%(%x%x)",
+      function(x)
+        return string.char(tonumber(x, 16))
+      end
+    )
+  end
+
+  local files = scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
+  for _, name in ipairs(files) do
+    name = decode(Path:new(name):make_relative(haven_config.haven_path)):sub(1, -6)
+    local p = Path:new(name)
+    if not p:exists() then
+      print(p:absolute())
+    end
+  end
 end
 
 M.disable = function()
