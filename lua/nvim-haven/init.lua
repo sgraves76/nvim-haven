@@ -583,14 +583,14 @@ M.clean = function()
     )
   end
 
-  local files = scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
-  for _, name in ipairs(files) do
-    local original_path = Path:new(name)
-    name = decode(Path:new(name):make_relative(haven_config.haven_path)):sub(1, -6)
-    local p = Path:new(name)
-    if not p:exists() then
-      print("removing: " .. original_path:absolute())
-      original_path:rm()
+  local history_files = scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
+  for _, history_file in ipairs(history_files) do
+    local source_path =
+      Path:new(decode(Path:new(history_file):make_relative(haven_config.haven_path)):sub(1, -6))
+    if not source_path:exists() then
+      local history_path = Path:new(history_file)
+      print("removing: " .. history_path:absolute())
+      history_path:rm()
     end
   end
 end
