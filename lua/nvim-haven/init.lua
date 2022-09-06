@@ -585,11 +585,12 @@ M.clean = function()
 
   local files = scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
   for _, name in ipairs(files) do
+    local original_path = Path:new(name)
     name = decode(Path:new(name):make_relative(haven_config.haven_path)):sub(1, -6)
     local p = Path:new(name)
     if not p:exists() then
-      print("removing:" .. p:absolute())
-      p:rm()
+      print("removing: " .. original_path:absolute())
+      original_path:rm()
     end
   end
 end
