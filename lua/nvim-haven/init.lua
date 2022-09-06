@@ -588,7 +588,8 @@ M.clean = function()
     name = decode(Path:new(name):make_relative(haven_config.haven_path)):sub(1, -6)
     local p = Path:new(name)
     if not p:exists() then
-      print(p:absolute())
+      print("removing:" .. p:absolute())
+      p:rm()
     end
   end
 end
