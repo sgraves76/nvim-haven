@@ -5,17 +5,26 @@ Local file history save and restore for Neovim (requires `nvim-telescope`)
 ### Global functions
 
 ```lua
-  -- Remove history for files that no longer exist
-  _G.Nvim_Haven_Clean = M.clean
+-- Remove history for files that no longer exist
+_G.Nvim_Haven_Clean = M.clean
 
-  -- Disable nvim-haven
-  _G.Nvim_Haven_Disable = M.disable
+-- Disable nvim-haven
+_G.Nvim_Haven_Disable = M.disable
 
-  -- Enable nvim-haven
-  _G.Nvim_Haven_Enable = M.enable
+-- Enable nvim-haven
+_G.Nvim_Haven_Enable = M.enable
 
-  -- Display history in telescope
-  _G.Nvim_Haven_History = M.history
+-- Display history in telescope
+_G.Nvim_Haven_History = M.history
+```
+
+### Preview navigation keymaps
+
+```lua
+map("i", "<c-l>", do_forward_jump)
+map("n", "<c-l>", do_forward_jump)
+map("i", "<c-h>", do_reverse_jump)
+map("n", "<c-h>", do_reverse_jump)
 ```
 
 ### Example

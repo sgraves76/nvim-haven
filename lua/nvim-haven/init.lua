@@ -539,7 +539,7 @@ M.setup = function(config)
       if type(e) ~= "function" then
         print_message(
           true,
-          "'exlcusions' contains an entry that is not a function. Skipping all exclusions until this is corrected:"
+          "'exclusions' contains an entry that is not a function. Skipping all exclusions until this is corrected:"
         )
         table.print_table(e)
         break
