@@ -20,7 +20,7 @@ Local file history save and restore for Neovim (requires `nvim-telescope`)
 
 ### Example
 
-> Example utilizes my custom Neovim distribution `darcula`  
+> Example utilizes my custom Neovim distribution `darcula`.  
 > This is not publicly available yet, but should be self-explanatory nonetheless :)  
 
 ```lua
