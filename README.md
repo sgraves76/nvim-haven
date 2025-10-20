@@ -104,3 +104,64 @@ end
 
 return M
 ```
+
+### Default configuration
+
+```lua
+local haven_config = {
+  enabled = true,
+  exclusions = {
+    function(path, _)
+      if gos.is_windows then
+        return path:lower():starts_with(
+          (vim.fn.eval("$VIMRUNTIME") .. gpath.directory_sep):lower()
+        )
+      end
+      return path:starts_with(vim.fn.eval("$VIMRUNTIME") .. gpath.directory_sep)
+    end,
+    function(path, _)
+      if gos.is_windows then
+        return path:lower():starts_with(
+          (vim.fn.stdpath("data") .. gpath.directory_sep):lower()
+        )
+      end
+      return path:starts_with(vim.fn.stdpath("data") .. gpath.directory_sep)
+    end,
+    function(path, _)
+      if gos.is_windows then
+        return path:lower():starts_with(
+          (gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") ..
+            gpath.directory_sep):lower()
+        )
+      end
+      return path:starts_with(
+        gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") ..
+          gpath.directory_sep
+      )
+    end,
+    function(path, _)
+      if gos.is_windows then
+        return path:lower():ends_with(
+          (gpath.directory_sep ..
+            ".git" .. gpath.directory_sep .. "COMMIT_EDITMSG"):lower()
+        )
+      end
+      return path:ends_with(
+        gpath.directory_sep .. ".git" .. gpath.directory_sep .. "COMMIT_EDITMSG"
+      )
+    end,
+    function(path, config)
+      if gos.is_windows then
+        return path:lower():starts_with(
+          (config.haven_path .. gpath.directory_sep):lower()
+        )
+      end
+      return path:starts_with(config.haven_path .. gpath.directory_sep)
+    end
+  },
+  haven_path = gpath.create_path(vim.fn.stdpath("data"), "nvim-haven"),
+  inclusions = {},
+  max_history_count = 200,
+  save_timeout = 10000
+}
+```
