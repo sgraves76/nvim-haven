@@ -24,30 +24,37 @@ local haven_config = {
   exclusions = {
     function(path, _)
       if gos.is_windows then
-        return path:lower():starts_with((vim.fn.eval("$VIMRUNTIME") .. gpath.directory_sep):lower())
+        return path:lower():starts_with(
+          (vim.fn.eval("$VIMRUNTIME") .. gpath.directory_sep):lower()
+        )
       end
       return path:starts_with(vim.fn.eval("$VIMRUNTIME") .. gpath.directory_sep)
     end,
     function(path, _)
       if gos.is_windows then
-        return path:lower():starts_with((vim.fn.stdpath("data") .. gpath.directory_sep):lower())
+        return path:lower():starts_with(
+          (vim.fn.stdpath("data") .. gpath.directory_sep):lower()
+        )
       end
       return path:starts_with(vim.fn.stdpath("data") .. gpath.directory_sep)
     end,
     function(path, _)
       if gos.is_windows then
         return path:lower():starts_with(
-          (gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. gpath.directory_sep):lower()
+          (gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") ..
+            gpath.directory_sep):lower()
         )
       end
       return path:starts_with(
-        gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") .. gpath.directory_sep
+        gpath.create_path(vim.fn.eval("$XDG_CONFIG_HOME"), "coc") ..
+          gpath.directory_sep
       )
     end,
     function(path, _)
       if gos.is_windows then
         return path:lower():ends_with(
-          (gpath.directory_sep .. ".git" .. gpath.directory_sep .. "COMMIT_EDITMSG"):lower()
+          (gpath.directory_sep ..
+            ".git" .. gpath.directory_sep .. "COMMIT_EDITMSG"):lower()
         )
       end
       return path:ends_with(
@@ -56,7 +63,9 @@ local haven_config = {
     end,
     function(path, config)
       if gos.is_windows then
-        return path:lower():starts_with((config.haven_path .. gpath.directory_sep):lower())
+        return path:lower():starts_with(
+          (config.haven_path .. gpath.directory_sep):lower()
+        )
       end
       return path:starts_with(config.haven_path .. gpath.directory_sep)
     end
@@ -93,7 +102,10 @@ local create_save_file_path = function(buf_info)
     ):gsub(" ", "+")
   end
 
-  return gpath.create_path(haven_config.haven_path, encode(buf_info.name) .. ".save")
+  return gpath.create_path(
+    haven_config.haven_path,
+    encode(buf_info.name) .. ".save"
+  )
 end
 
 local save_change_file = function(buf_info, lines, save_file)
@@ -151,7 +163,10 @@ local read_change_file = function(save_file)
   end
   file:close()
 
-  local entries = vim.json.decode("[" .. table.concat(save_data:split(line_ending), ",") .. "]")
+  local entries =
+    vim.json.decode(
+    "[" .. table.concat(save_data:split(line_ending), ",") .. "]"
+  )
   if #entries > haven_config.max_history_count then
     while #entries > haven_config.max_history_count do
       table.remove(entries, 1)
@@ -168,12 +183,16 @@ local process_file_changed = function(buf_info)
   local immediate = vim.fn.filereadable(save_file) == 0
 
   local update_changed_lookup = function()
-    changed_lookup[save_file] = {changed = buf_info.changed, changedtick = buf_info.changedtick}
+    changed_lookup[save_file] = {
+      changed = buf_info.changed,
+      changedtick = buf_info.changedtick
+    }
   end
 
   if
     not immediate and
-      (changed_data == nil or (buf_info.changed == 0 and changed_data.changed == 0) or
+      (changed_data == nil or
+        (buf_info.changed == 0 and changed_data.changed == 0) or
         buf_info.changedtick == changed_data.changedtick)
    then
     update_changed_lookup()
@@ -265,7 +284,8 @@ local handle_vim_leave = function()
 end
 
 local setup_autocmds = function()
-  local group_id = vim.api.nvim_create_augroup("nvim-haven-internal", {clear = true})
+  local group_id =
+    vim.api.nvim_create_augroup("nvim-haven-internal", {clear = true})
   if haven_config.enabled then
     vim.api.nvim_create_autocmd(
       "BufEnter",
@@ -448,7 +468,13 @@ local show_picker = function(entries)
               )
               previous_lines = nil
 
-              vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, buffer_lines)
+              vim.api.nvim_buf_set_lines(
+                self.state.bufnr,
+                0,
+                -1,
+                false,
+                buffer_lines
+              )
               putils.regex_highlighter(self.state.bufnr, "diff")
 
               jump_state = {self = self, cur = 0, diff_rows = diff_rows}
@@ -458,7 +484,13 @@ local show_picker = function(entries)
                 end
               )
             else
-              vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, entry.value.lines)
+              vim.api.nvim_buf_set_lines(
+                self.state.bufnr,
+                0,
+                -1,
+                false,
+                entry.value.lines
+              )
               putils.highlighter(self.state.bufnr, entry.value.ft, {})
             end
           end
@@ -516,7 +548,8 @@ M.setup = function(config)
     end
   end
   haven_config.enabled = vim.F.if_nil(config.enabled, haven_config.enabled)
-  haven_config.haven_path = vim.F.if_nil(config.haven_path, haven_config.haven_path)
+  haven_config.haven_path =
+    vim.F.if_nil(config.haven_path, haven_config.haven_path)
 
   if config.inclusions ~= nil then
     for _, e in pairs(config.inclusions) do
@@ -534,22 +567,38 @@ M.setup = function(config)
   haven_config.max_history_count =
     vim.F.if_nil(config.max_history_count, haven_config.max_history_count)
   if haven_config.max_history_count < 10 then
-    print_message(true, "'max_history_count' too low: " .. haven_config.max_history_count)
+    print_message(
+      true,
+      "'max_history_count' too low: " .. haven_config.max_history_count
+    )
     haven_config.max_history_count = 100
-    print_message(true, "reset 'max_history_count': " .. haven_config.max_history_count)
+    print_message(
+      true,
+      "reset 'max_history_count': " .. haven_config.max_history_count
+    )
   elseif haven_config.max_history_count > 500 then
-    print_message(true, "'max_history_count' too high: " .. haven_config.max_history_count)
+    print_message(
+      true,
+      "'max_history_count' too high: " .. haven_config.max_history_count
+    )
     haven_config.max_history_count = 500
-    print_message(true, "reset 'max_history_count': " .. haven_config.max_history_count)
+    print_message(
+      true,
+      "reset 'max_history_count': " .. haven_config.max_history_count
+    )
   end
 
-  haven_config.save_timeout = vim.F.if_nil(config.save_timeout, haven_config.save_timeout)
+  haven_config.save_timeout =
+    vim.F.if_nil(config.save_timeout, haven_config.save_timeout)
   if haven_config.save_timeout < 135 then
     print_message(true, "'save_timeout' too low: " .. haven_config.save_timeout)
     haven_config.save_timeout = 135
     print_message(true, "reset 'save_timeout': " .. haven_config.save_timeout)
   elseif haven_config.save_timeout > 10000 then
-    print_message(true, "'save_timeout' too high: " .. haven_config.save_timeout)
+    print_message(
+      true,
+      "'save_timeout' too high: " .. haven_config.save_timeout
+    )
     haven_config.save_timeout = 10000
     print_message(true, "reset 'save_timeout': " .. haven_config.save_timeout)
   end
@@ -583,10 +632,16 @@ M.clean = function()
     )
   end
 
-  local history_files = scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
+  local history_files =
+    scan.scan_dir(haven_config.haven_path, {hidden = true, depth = 1})
   for _, history_file in ipairs(history_files) do
     local source_path =
-      Path:new(decode(Path:new(history_file):make_relative(haven_config.haven_path)):sub(1, -6))
+      Path:new(
+      decode(Path:new(history_file):make_relative(haven_config.haven_path)):sub(
+        1,
+        -6
+      )
+    )
     if not source_path:exists() then
       local history_path = Path:new(history_file)
       print("removing: " .. history_path:absolute())
@@ -629,6 +684,7 @@ M.history = function(bufname)
   end
 end
 
+_G.Nvim_Haven_Clean = M.clean
 _G.Nvim_Haven_Disable = M.disable
 _G.Nvim_Haven_Enable = M.enable
 _G.Nvim_Haven_History = M.history

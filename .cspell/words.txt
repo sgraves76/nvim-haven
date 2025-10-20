@@ -1,0 +1,7 @@
+darcula
+keymaps
+neovim
+nmap
+nvim
+sgraves76
+stdpath
